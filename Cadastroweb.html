@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <!-- Define a codificação de caracteres como UTF-8 -->
+    <meta charset="UTF-8">
+    <!-- Configura a viewport para ser responsiva e definir a escala inicial -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Título da página -->
+    <title>Cadastro Completo</title>
+    <!-- Link para a folha de estilos do Bootstrap -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Estilos CSS internos -->
+    <style>
+        body {
+            background-color: #ffffff; /* Cor de fundo */
+            padding-top: 20px; /* Espaçamento no topo */
+            
+        }
+        .container {
+            background: rgb(255, 255, 255); /* Fundo branco para o container */
+            padding: 20px; /* Espaçamento interno */
+            border-radius: 8px; /* Bordas arredondadas */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Sombra ao redor do container */
+        }
+    </style>
+</head>
+<body>
+    <!-- Container principal para o formulário de cadastro -->
+    <div class="container">
+        <h2>Cadastro de Usuário</h2>
+        <!-- Formulário de cadastro -->
+        <form id="formCadastro" enctype="multipart/form-data">
+            <!-- Campo de nome -->
+            <div class="form-group">
+                <label for="nome">Nome:</label>
+                <input type="text" class="form-control" id="nome" required>
+            </div>
+            <!-- Campo de data de nascimento -->
+            <div class="form-group">
+                <label for="dataNascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="dataNascimento" required>
+            </div>
+            <!-- Campo de email -->
+            <div class="form-group">
+                <label for="email">E-mail:</label>
+                <input type="email" class="form-control" id="email" required>
+            </div>
+            <!-- Campo de senha -->
+            <div class="form-group">
+                <label for="senha">Senha:</label>
+                <input type="password" class="form-control" id="senha" required>
+            </div>
+            <!-- Campo de upload de foto de perfil -->
+            <div class="form-group">
+                <label for="fotoPerfil">Foto de Perfil:</label>
+                <input type="file" class="form-control" id="fotoPerfil" accept="image/*">
+            </div>
+            <!-- Botão de cadastro -->
+            <button type="submit" class="btn btn-primary">Cadastrar</button>
+        </form>
+    </div>
+    <!-- Scripts JavaScript -->
+    <script type="module">
+        // Importa funções específicas do Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+    
+        const firebaseConfig = {
+  apiKey: "AIzaSyAHqYTP9oWynlJLj80EVSfKwarPGUUCtIk",
+  authDomain: "primeiro-projeto-b768c.firebaseapp.com",
+  projectId: "primeiro-projeto-b768c",
+  storageBucket: "primeiro-projeto-b768c.appspot.com",
+  messagingSenderId: "938419930408",
+  appId: "1:938419930408:web:a6cda6ac543f21f1aa3c1d"
+};
+        // Inicialização do Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+    
+
+        // Evento de submit do formulário
+        document.getElementById('formCadastro').addEventListener('submit', async function(event){
+            event.preventDefault(); // Previne o comportamento padrão do formulário
+    
+            // Obtém os valores dos campos do formulário
+            const nome = document.getElementById('nome').value;
+            const dataNascimento = document.getElementById('dataNascimento').value;
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            const fotoPerfil = document.getElementById('fotoPerfil').files[0];
+            try {
+                // Criação do usuário com e-mail e senha
+                const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+                const userId = userCredential.user.uid;   
+                // Upload da foto de perfil, se existir
+                let fotoURL = '';
+                if (fotoPerfil) {
+                    const fotoRef = ref(storage, 'perfil/' + userId);
+                    const uploadResult = await uploadBytes(fotoRef, fotoPerfil);
+                    fotoURL = await getDownloadURL(uploadResult.ref);
+                }
+                // Salva os dados do usuário no Firestore
+                await setDoc(doc(db, 'usuarios', userId), {
+                    nome,
+                    dataNascimento,
+                    email,
+                    fotoURL
+                });
+                // Mensagem de sucesso
+                alert('Cadastro realizado com sucesso!');
+                window.location.href = 'pagweb.html';
+            } catch (error) {
+                // Tratamento de erros
+                console.error('Erro no cadastro:', error);
+                alert('Erro no cadastro: ' + error.message);
+            }
+        });
+    </script>    
+</body>
+</html>
